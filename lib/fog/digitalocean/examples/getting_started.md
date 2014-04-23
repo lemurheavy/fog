@@ -4,7 +4,7 @@ You'll need a DigitalOcean account and API key to use this provider.
 
 Get one from http://www.digitalocean.com.
 
-To generate the API key, login to the DigitalOcean web panel and go to 
+To generate the API key, login to the DigitalOcean web panel and go to
 'My Settings -> API Access -> Generate a new API key'.
 
 Write down the Client Key and API Key, you'll need both to use the service.
@@ -13,7 +13,7 @@ Write down the Client Key and API Key, you'll need both to use the service.
 ## Connecting, retrieving and managing server objects
 
 Before we start, I guess it will be useful to the reader to know
-that Fog servers are 'droplets' in DigitalOcean's parlance. 
+that Fog servers are 'droplets' in DigitalOcean's parlance.
 'Server' is the Fog way to name VMs, and we have
 respected that in the DigitalOcean's Fog provider.
 
@@ -22,7 +22,7 @@ First, create a connection to the host:
 ```ruby
 require 'fog'
 
-do = Fog::Compute.new({
+docean = Fog::Compute.new({
   :provider => 'DigitalOcean',
   :digitalocean_api_key   => 'poiuweoruwoeiuroiwuer', # your API key here
   :digitalocean_client_id => 'lkjasoidfuoiu'          # your client key here
@@ -56,7 +56,7 @@ server = docean.servers.create :name => 'foobar',
                                :image_id  => docean.images.first.id,
                                # use the first flavor listed
                                :flavor_id => docean.flavors.first.id,
-                               # use the first region listed 
+                               # use the first region listed
                                :region_id => docean.regions.first.id
 ```
 

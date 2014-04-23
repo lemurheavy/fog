@@ -1,4 +1,4 @@
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'riakcs'))
+require 'fog/riakcs/core'
 
 module Fog
   module RiakCS
@@ -47,16 +47,13 @@ module Fog
         include Utils
 
         def initialize(options = {})
-          require 'mime/types'
-          require 'multi_json'
-
           configure_uri_options(options)
           @riakcs_access_key_id     = options[:riakcs_access_key_id]
           @riakcs_secret_access_key = options[:riakcs_secret_access_key]
           @connection_options       = options[:connection_options] || {}
           @persistent               = options[:persistent]         || false
 
-          @raw_connection = Fog::Connection.new(riakcs_uri, @persistent, @connection_options)
+          @raw_connection = Fog::XML::Connection.new(riakcs_uri, @persistent, @connection_options)
 
           @s3_connection  = Fog::Storage.new(
             :provider              => 'AWS',
@@ -64,7 +61,8 @@ module Fog
             :aws_secret_access_key => @riakcs_secret_access_key,
             :host                  => @host,
             :port                  => @port,
-            :scheme                => @scheme
+            :scheme                => @scheme,
+            :connection_options    => @connection_options
           )
         end
 
@@ -89,7 +87,7 @@ module Fog
             end
           end
           if !response.body.empty? && parse_response
-            response.body = MultiJson.decode(response.body)
+            response.body = Fog::JSON.decode(response.body)
           end
           response
         end

@@ -1,16 +1,36 @@
 language: ruby
 
-rvm:
-  - 1.8.7
-  - 1.9.2
-  - 1.9.3
-  - 2.0.0
+script: bundle exec rake travis
 
-script: FOG_MOCK=true bundle exec shindont
+matrix:
+  fast_finish: true
+  include:
+    - rvm: 1.8.7
+      gemfile: gemfiles/Gemfile-ruby-1.8.7
+    - rvm: 1.9.3
+      gemfile: Gemfile
+    - rvm: 2.0.0
+      gemfile: Gemfile
+    - rvm: 2.1.0
+      gemfile: Gemfile
+    - rvm: 2.1.1
+      gemfile: Gemfile
+      env: COVERAGE=true
+    - rvm: 2.1.1
+      gemfile: gemfiles/Gemfile-edge
+    - rvm: jruby-18mode
+      gemfile: gemfiles/Gemfile-ruby-1.8.7
+    - rvm: jruby-19mode
+      gemfile: Gemfile
+    - rvm: jruby-head
+      gemfile: Gemfile
+
+  allow_failures:
+    - rvm: jruby-head
 
 notifications:
   email: false
-  irc: 
+  irc:
     channels:
       - "irc.freenode.org#ruby-fog"
     template:
@@ -20,3 +40,6 @@ notifications:
     on_success: always
     on_failure: always
     use_notice: false
+
+before_install:
+  - gem update --system #  todo: workaround for https://github.com/rubygems/rubygems/pull/763

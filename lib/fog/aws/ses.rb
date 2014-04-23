@@ -1,9 +1,12 @@
-require 'fog/aws'
+require 'fog/aws/core'
 
 module Fog
   module AWS
     class SES < Fog::Service
       extend Fog::AWS::CredentialFetcher::ServiceMethods
+
+      class InvalidParameterError < Fog::Errors::Error; end
+      class MessageRejected < Fog::Errors::Error; end
 
       requires :aws_access_key_id, :aws_secret_access_key
       recognizes :region, :host, :path, :port, :scheme, :persistent, :use_iam_profile, :aws_session_token, :aws_credentials_expire_at
@@ -11,6 +14,7 @@ module Fog
       request_path 'fog/aws/requests/ses'
       request :delete_verified_email_address
       request :verify_email_address
+      request :verify_domain_identity
       request :get_send_quota
       request :get_send_statistics
       request :list_verified_email_addresses
@@ -58,7 +62,7 @@ module Fog
           @persistent = options[:persistent]  || false
           @port       = options[:port]        || 443
           @scheme     = options[:scheme]      || 'https'
-          @connection = Fog::Connection.new("#{@scheme}://#{@host}:#{@port}#{@path}", @persistent, @connection_options)
+          @connection = Fog::XML::Connection.new("#{@scheme}://#{@host}:#{@port}#{@path}", @persistent, @connection_options)
         end
 
         def reload
@@ -102,15 +106,28 @@ module Fog
           end
           body.chop! # remove trailing '&'
 
-          response = @connection.request({
-            :body       => body,
-            :expects    => 200,
-            :headers    => headers,
-            :idempotent => idempotent,
-            :host       => @host,
-            :method     => 'POST',
-            :parser     => parser
-          })
+          begin
+            response = @connection.request({
+              :body       => body,
+              :expects    => 200,
+              :headers    => headers,
+              :idempotent => idempotent,
+              :host       => @host,
+              :method     => 'POST',
+              :parser     => parser
+            })
+          rescue Excon::Errors::HTTPStatusError => error
+            match = Fog::AWS::Errors.match_error(error)
+            raise if match.empty?
+            raise case match[:code]
+                  when 'MessageRejected'
+                    Fog::AWS::SES::MessageRejected.slurp(error, match[:message])
+                  when 'InvalidParameterValue'
+                    Fog::AWS::SES::InvalidParameterError.slurp(error, match[:message])
+                  else
+                    Fog::AWS::SES::Error.slurp(error, "#{match[:code]} => #{match[:message]}")
+                  end
+          end
 
           response
         end

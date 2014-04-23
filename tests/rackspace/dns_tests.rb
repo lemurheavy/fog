@@ -69,7 +69,7 @@ Shindo.tests('Fog::DNS::Rackspace', ['rackspace']) do
     pending if Fog.mocking?
 
     tests('no params').succeeds do
-      @service = Fog::DNS::Rackspace.new
+      @service = Fog::DNS::Rackspace.new :rackspace_region => nil
       returns(true, "auth token populated") { !@service.send(:auth_token).nil? }
       returns(false, "path populated") { @service.instance_variable_get("@uri").host.nil? }
       returns(true, "contains tenant id") {  (@service.instance_variable_get("@uri").path =~ /\/v1\.0\/\d+$/) != nil} #dns does not error if tenant id is missing
@@ -80,6 +80,31 @@ Shindo.tests('Fog::DNS::Rackspace', ['rackspace']) do
       returns(true, "auth token populated") { !@service.send(:auth_token).nil? }
       returns(true, "uses custom endpoint") { (@service.instance_variable_get("@uri").host =~ /my-custom-endpoint\.com/) != nil }
     end
+  end
+
+  tests('reauthentication') do
+    pending if Fog.mocking?
+
+    tests('should reauth with valid credentials') do
+      @service = Fog::DNS::Rackspace.new
+      returns(true, "auth token populated") { !@service.send(:auth_token).nil? }
+      @service.instance_variable_set("@auth_token", "bad_token")
+      returns(200) { @service.list_domains.status }
+    end
+    tests('should terminate with incorrect credentials') do
+      raises(Excon::Errors::Unauthorized) { Fog::DNS::Rackspace.new :rackspace_api_key => 'bad_key' }
+    end
+  end
+
+  tests('array_to_query_string') do
+    pending if Fog.mocking?
+
+    @service = Fog::DNS::Rackspace.new
+    returns("") { @service.send(:array_to_query_string, nil) }
+    returns("param1=1") { @service.send(:array_to_query_string, {:param1 => [1]}) }
+    returns("param1=1") { @service.send(:array_to_query_string, {:param1 => 1}) }
+    returns("param1=1,2") { @service.send(:array_to_query_string, {:param1 => [1,2]}) }
+    returns("param1=1&param2=2") { @service.send(:array_to_query_string, {:param1 => [1], :param2 => [2]}) }
   end
 
 end

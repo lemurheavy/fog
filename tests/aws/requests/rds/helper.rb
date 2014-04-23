@@ -5,16 +5,21 @@ class AWS
     module Formats
 
       BASIC = {
-        'ResponseMetadata' => {'RequestId' => String}
+        'ResponseMetadata' => { 'RequestId' => String }
+      }
+
+      DB_AVAILABILITY_ZONE_OPTION = {
+          'Name' => String,
+          'ProvisionedIopsCapable' => Fog::Boolean
       }
 
       DB_PARAMETER_GROUP = {
           'DBParameterGroupFamily' => String,
-          'DBParameterGroupName'=> String,
-          'Description'=> String
+          'DBParameterGroupName' => String,
+          'Description' => String
       }
       CREATE_DB_PARAMETER_GROUP = {
-        'ResponseMetadata' => {'RequestId' => String},
+        'ResponseMetadata' => { 'RequestId' => String },
         'CreateDBParameterGroupResult' => {
           'DBParameterGroup' => DB_PARAMETER_GROUP
         }
@@ -73,18 +78,34 @@ class AWS
       })
 
       DESCRIBE_DB_PARAMETER_GROUP = {
-        'ResponseMetadata' => {'RequestId' => String},
-        'DescribeDBParameterGroupsResult' =>{
+        'ResponseMetadata' => { 'RequestId' => String },
+        'DescribeDBParameterGroupsResult' => {
           'DBParameterGroups' => [DB_PARAMETER_GROUP]
         }
       }
+
+      ORDERABLE_DB_INSTANCE_OPTION = {
+          'MultiAZCapable' => Fog::Boolean,
+          'Engine' => String,
+          'LicenseModel' => String,
+          'ReadReplicaCapable' => Fog::Boolean,
+          'EngineVersion' => String,
+          'AvailabilityZones' => [DB_AVAILABILITY_ZONE_OPTION],
+          'DBInstanceClass' => String,
+          'Vpc' => Fog::Boolean
+      }
+
+      DESCRIBE_ORDERABLE_DB_INSTANCE_OPTION = BASIC.merge({
+          'DescribeOrderableDBInstanceOptionsResult' => {
+              'OrderableDBInstanceOptions' => [ORDERABLE_DB_INSTANCE_OPTION]
+          }
+      })
 
       MODIFY_PARAMETER_GROUP = BASIC.merge({
         'ModifyDBParameterGroupResult' => {
           'DBParameterGroupName' => String
         }
       })
-
 
       DB_PARAMETER = {
         'ParameterValue' => Fog::Nullable::String,
@@ -105,7 +126,20 @@ class AWS
 
       })
 
-      SNAPSHOT={
+      DB_LOG_FILE = {
+        'LastWritten' => Time,
+        'Size' => Integer,
+        'LogFileName' => String
+      }
+
+      DESCRIBE_DB_LOG_FILES = BASIC.merge({
+        'DescribeDBLogFilesResult' => {
+          'Marker' => Fog::Nullable::String,
+          'DBLogFiles' => [DB_LOG_FILE]
+        }
+      })
+
+      SNAPSHOT = {
         'AllocatedStorage' => Integer,
         'AvailabilityZone' => String,
         'DBInstanceIdentifier' => String,
@@ -113,12 +147,14 @@ class AWS
         'EngineVersion' => String,
         'Engine' => String,
         'InstanceCreateTime' => Time,
+        'Iops' => Fog::Nullable::Integer,
         'MasterUsername' => String,
         'Port' => Integer,
         'SnapshotCreateTime' => Fog::Nullable::Time,
         'Status' => String,
         'SnapshotType' => String
       }
+
       INSTANCE = {
         'AllocatedStorage' => Integer,
         'AutoMinorVersionUpgrade' => Fog::Boolean,
@@ -137,6 +173,7 @@ class AWS
             'DBSecurityGroupName' => String
           }],
         'DBSubnetGroupName' => Fog::Nullable::String,
+        'PubliclyAccessible' => Fog::Boolean,
         'Endpoint' => {
           'Address' => Fog::Nullable::String,
           'Port' => Fog::Nullable::Integer
@@ -144,6 +181,7 @@ class AWS
         'Engine' => String,
         'EngineVersion' => String,
         'InstanceCreateTime' => Fog::Nullable::Time,
+        'Iops' => Fog::Nullable::Integer,
         'LatestRestorableTime' => Fog::Nullable::Time,
         'LicenseModel' => String,
         'MasterUsername' => String,
@@ -157,15 +195,15 @@ class AWS
           'AllocatedStorage'      => Fog::Nullable::Integer,
           'Port'                  => Fog::Nullable::Integer
         },
-        'PreferredBackupWindow'=> String,
-        'PreferredMaintenanceWindow'=> String,
-        'ReadReplicaDBInstanceIdentifiers'=> [Fog::Nullable::String]
+        'PreferredBackupWindow' => String,
+        'PreferredMaintenanceWindow' => String,
+        'ReadReplicaDBInstanceIdentifiers' => [Fog::Nullable::String]
       }
 
       REPLICA_INSTANCE = INSTANCE.merge({
         'BackupRetentionPeriod' => Fog::Nullable::String,
         'PreferredBackupWindow' => Fog::Nullable::String,
-        'ReadReplicaSourceDBInstanceIdentifier'=> String
+        'ReadReplicaSourceDBInstanceIdentifier' => String
       })
 
       CREATE_DB_INSTANCE = BASIC.merge({
@@ -202,6 +240,12 @@ class AWS
       CREATE_READ_REPLICA = BASIC.merge({
         'CreateDBInstanceReadReplicaResult' => {
           'DBInstance' => REPLICA_INSTANCE
+        }
+      })
+
+      PROMOTE_READ_REPLICA = BASIC.merge({
+        'PromoteReadReplicaResult' => {
+            'DBInstance' => INSTANCE
         }
       })
 

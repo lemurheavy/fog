@@ -65,7 +65,7 @@ module Fog
           true
         end
 
-        def save
+        def save(options = {})
           raise Fog::Errors::Error.new('Resaving an existing object may create a duplicate') if persisted?
           requires :flavor_id, :image_id
           options = {
@@ -80,8 +80,8 @@ module Fog
         end
 
         def setup(credentials = {})
-          requires :public_ip_address, :identity, :public_key, :username
-          Fog::SSH.new(public_ip_address, username, credentials).run([
+          requires :ssh_ip_address, :identity, :public_key, :username
+          Fog::SSH.new(ssh_ip_address, username, credentials).run([
             %{mkdir .ssh},
             %{echo "#{public_key}" >> ~/.ssh/authorized_keys},
             %{passwd -l #{username}},
